@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_webapi_first_course/helpers/weekday.dart';
 import 'package:flutter_webapi_first_course/models/journal.dart';
-import '../../services/journal_service.dart';
+import 'package:flutter_webapi_first_course/services/journal_service.dart';
 
-class AddJournalScreen extends StatelessWidget {
+class AddJournalScreen extends StatefulWidget {
   final Journal journal;
-  AddJournalScreen({Key? key, required this.journal}) : super(key: key);
+  const AddJournalScreen({Key? key, required this.journal}) : super(key: key);
 
-  final TextEditingController _contentController = TextEditingController();
+  @override
+  State<AddJournalScreen> createState() => _AddJournalScreenState();
+}
+
+class _AddJournalScreenState extends State<AddJournalScreen> {
+  TextEditingController contentController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            "${WeekDay(journal.createdAt.weekday).long.toLowerCase()}, ${journal.createdAt.day}  |  ${journal.createdAt.month}  |  ${journal.createdAt.year}"),
+        title: Text(WeekDay(widget.journal.createdAt).toString()),
         actions: [
           IconButton(
             onPressed: () {
@@ -25,26 +29,30 @@ class AddJournalScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8),
         child: TextField(
-          controller: _contentController,
+          controller: contentController,
           keyboardType: TextInputType.multiline,
           style: const TextStyle(fontSize: 24),
           expands: true,
-          minLines: null,
           maxLines: null,
+          minLines: null,
         ),
       ),
     );
   }
 
-  registerJournal(BuildContext context) {
-    String content = _contentController.text;
-
-    journal.content = content;
-    JournalService service = JournalService();
-    service.register(journal).then((value) {
-      Navigator.pop(context, value);
+  registerJournal(BuildContext context) async {
+    JournalService journalService = JournalService();
+    widget.journal.content = contentController.text;
+    journalService.register(widget.journal).then((value) {
+      if (value) {
+        Navigator.pop(context, DisposeStatus.success);
+      } else {
+        Navigator.pop(context, DisposeStatus.error);
+      }
     });
   }
 }
+
+enum DisposeStatus { exit, error, success }
